@@ -1,21 +1,21 @@
 #include "sockets.hpp"
 #include "srvr.hpp"
 
-MSocket::MSocket(qintptr socketDescriptor, Server* server) : server{server} {
-  socket->setSocketDescriptor(socketDescriptor);
-  descriptor = socket->socketDescriptor();
-  qDebug() << "socket descriptor: " << socket->socketDescriptor();
-  connect(socket.get(), &QTcpSocket::readyRead, this, &MSocket::start_reading);
-  connect(socket.get(), &QTcpSocket::disconnected, this, &MSocket::disconnectt);
+MSocket::MSocket(qintptr socketDescriptor, Server* server, QObject *parent) : server{server}, QObject(parent) {
+  socket.setSocketDescriptor(socketDescriptor);
+  descriptor = socket.socketDescriptor();
+  qDebug() << "socket descriptor: " << socket.socketDescriptor();
+  connect(&socket, &QTcpSocket::readyRead, this, &MSocket::start_reading);
+  connect(&socket, &QTcpSocket::disconnected, this, &MSocket::disconnectt);
   connect(this, &MSocket::send_this, this, &MSocket::send);
 }
 
 void MSocket::start_reading() {
   QThreadPool::globalInstance()->start([&]() {
-    QDataStream in(socket.get());
+    QDataStream in(&socket);
     in.setVersion(QDataStream::Qt_6_5);
     message_type mes_type;
-    while (socket->bytesAvailable()) {
+    while (socket.bytesAvailable()) {
       mutex.lock();
       in.startTransaction();
       in >> mes_type;
@@ -101,27 +101,27 @@ void MSocket::start_reading() {
 
 void MSocket::send(QByteArray block) {
   mutex.lock();
-  socket->write(block);
+  socket.write(block);
   mutex.unlock();
   qDebug() << "written to" << descriptor;
 }
 
 void MSocket::disconnectt() {
-  server->disconnectt(descriptor);
+  server->remove_socket(descriptor);
 }
 
 MSocket* SocketsCollection::push(qintptr socketDescriptor, Server* server) {
-  auto&& b = unregistered.emplace(socketDescriptor, std::make_unique<MSocket>(socketDescriptor, server));
-  return b.first->second.get();
+  auto&& b = unregistered.emplace(socketDescriptor, new MSocket(socketDescriptor, server, server));
+  return b.value().get();
 }
 
 MSocket* SocketsCollection::register_connected(qint32 id, qintptr descriptor)
 {
   auto&& a = unregistered.find(descriptor);
-  a->second->id_in_db = id;
+  a.value()->id_in_db = id;
   if (a != unregistered.end()) {
     registered.emplace(id, descriptor);
-    return a->second.get();
+    return a.value().get();
   } else {
     qDebug() << "bug occured. register_connected failed. terminating";
     std::terminate();
@@ -130,7 +130,7 @@ MSocket* SocketsCollection::register_connected(qint32 id, qintptr descriptor)
 
 MSocket* SocketsCollection::find_connected(qintptr descriptor) {
   if (auto&& b = unregistered.find(descriptor); b != unregistered.end()) {
-    return b->second.get();
+    return b.value().get();
   } else {
     qDebug() << "bug occured! find_connected(descriptor) did not find. terminating";
     std::terminate();
@@ -139,7 +139,7 @@ MSocket* SocketsCollection::find_connected(qintptr descriptor) {
 
 MSocket* SocketsCollection::find_connected(qint32 id) {
   if (auto&& b = registered.find(id); b != registered.end()) {
-    return find_connected(b->second);
+    return find_connected(b.value());
   } else {
     qDebug() << "bug occured! find_connected_tag(tag) did not find. terminating";
     std::terminate();
@@ -147,7 +147,9 @@ MSocket* SocketsCollection::find_connected(qint32 id) {
 }
 
 void SocketsCollection::remove_connected(qintptr descriptor) {
-  registered.erase(unregistered.find(descriptor)->second->id_in_db);
-  unregistered.erase(descriptor);
+  registered.remove(unregistered.find(descriptor).value()->id_in_db);
+  //unregistered.find(descriptor).value()->socket.deleteLater();
+  //unregistered.find(descriptor).value()->deleteLater();
+  unregistered.remove(descriptor);
 }
 

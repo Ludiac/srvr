@@ -2,6 +2,7 @@
 
 #include <QTcpSocket>
 #include <QMutex>
+#include <QPointer>
 
 class Server;
 
@@ -9,12 +10,12 @@ struct MSocket : QObject {
   Q_OBJECT
 
 public:
-  MSocket(qintptr socketDescriptor, Server* server);
+  MSocket(qintptr socketDescriptor, Server* server, QObject* parent);
   ~MSocket() {
     qDebug() << descriptor << "socket destroyed";
   }
 
-  std::unique_ptr<QTcpSocket> socket = std::make_unique<QTcpSocket>();
+  QTcpSocket socket;
   qintptr descriptor;
   qint32 id_in_db;
 
@@ -41,6 +42,9 @@ public:
   void remove_connected(qintptr descriptor);
   QString find_connected_tag(qintptr descriptor);
 private:
-  std::unordered_map<qint32, qintptr> registered;
-  std::unordered_map<qintptr, std::unique_ptr<MSocket>> unregistered; //we hold a pointer to MSocket because it enables move semantics for MSocket (Q_OBJECT's are not movable)
+    QHash<qint32, qintptr> registered;
+    QHash<qintptr, QPointer<MSocket>> unregistered;
+
+//  std::unordered_map<qint32, qintptr> registered;
+//  std::unordered_map<qintptr, QPointer<MSocket>> unregistered; //we hold a pointer to MSocket because it enables move semantics for MSocket (Q_OBJECT's are not movable)
 };

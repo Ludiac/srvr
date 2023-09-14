@@ -21,7 +21,7 @@ public:
   void room_members(qint32 &&room_id, qintptr descriptor);
   void create_private_room(qint32 &&client, qintptr descriptor);
   void create_public_room(QString &&name_for_room, qintptr descriptor);
-  void disconnectt(qintptr descriptor);
+  void remove_socket(qintptr descriptor);
 protected:
   void incomingConnection(qintptr socketDescriptor) override;
 

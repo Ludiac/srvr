@@ -160,12 +160,12 @@ void Server::create_private_room(qint32 && client, qintptr descriptor)
 void Server::create_public_room(QString && name_for_room, qintptr descriptor)
 {
   try {
-//    auto&& room_creator = sockets.find_connected(descriptor)->id_in_db;
-//    std::unique_ptr<sql::PreparedStatement> stmnt(conn->prepareStatement("call private_room(?, ?)"));
-//    stmnt->setInt(1, room_creator);
-//    stmnt->setInt(2, client);
-//    stmnt->executeQuery();
-//    rooms_of_client(descriptor);
+    //    auto&& room_creator = sockets.find_connected(descriptor)->id_in_db;
+    //    std::unique_ptr<sql::PreparedStatement> stmnt(conn->prepareStatement("call private_room(?, ?)"));
+    //    stmnt->setInt(1, room_creator);
+    //    stmnt->setInt(2, client);
+    //    stmnt->executeQuery();
+    //    rooms_of_client(descriptor);
   } catch(sql::SQLException& e) {
     qDebug() << "Error creating private room:" << e.what();
   }
@@ -189,7 +189,7 @@ bool Server::connect_to_db() {
   return true;
 }
 
-void Server::disconnectt(qintptr descriptor) {
-  sockets.find_connected(descriptor)->socket->deleteLater();
+void Server::remove_socket(qintptr descriptor) {
+  sockets.find_connected(descriptor)->deleteLater();
   sockets.remove_connected(descriptor);
 }
