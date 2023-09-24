@@ -140,9 +140,7 @@ MSocket* SocketsCollection::find_connected(qintptr descriptor) {
   if (auto&& b = unregistered.find(descriptor); b != unregistered.end()) {
     return b.value().get();
   } else {
-    qDebug() << "bug occured! find_connected(descriptor) failed";
     return nullptr;
-    //std::terminate();
   }
 }
 
@@ -151,7 +149,6 @@ MSocket* SocketsCollection::find_connected(qint32 id) {
     return find_connected(b.value());
   } else {
     return nullptr;
-    //qDebug() << "bug occured! find_connected(qint32) did not find. terminating";
   }
 }
 

@@ -53,17 +53,6 @@ QStringList Server::ui_room_messages(qint32 room_id) {
   return messages;
 }
 
-QString Server::get_client_tag(qint32 client_id) {
-  std::unique_ptr<sql::PreparedStatement> stmnt(
-      conn->prepareStatement("select tag from user where id = ?"));
-  stmnt->setInt(1, client_id);
-  sql::ResultSet *result = stmnt->executeQuery();
-  QString client_tag;
-  result->next();
-  client_tag = result->getString(1);
-  return client_tag;
-}
-
 void Server::change_ban_status(qint32 client_id, bool new_ban_status) {
   try {
     std::unique_ptr<sql::PreparedStatement> stmnt(

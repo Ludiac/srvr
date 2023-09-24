@@ -11,14 +11,6 @@ QVariant GeneralLWItem::data(int role) const {
   return QListWidgetItem::data(role);
 }
 
-// ClientLWItem::ClientLWItem(qint32 id, QString text, QListWidget *parent,
-//                            int type)
-//     : id{id}, QListWidgetItem{text, parent, type} {}
-
-// ClientLWItem::ClientLWItem(Client client, QListWidget *parent, int type)
-//     : id{client.id}, ban_status{client.ban_status},
-//       QListWidgetItem{client.tag, parent, type} {}
-
 ClientLWItem::ClientLWItem(QHash<qint32, Client>::Iterator client,
                            QListWidget *parent, int type)
     : client_ptr{client}, QListWidgetItem{client->tag, parent, type} {}

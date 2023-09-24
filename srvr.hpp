@@ -37,7 +37,6 @@ public:
   QVector<QPair<qint32, QString>> all_open_rooms();
   QVector<qint32> room_participations(qint32 room_id);
   QStringList ui_room_messages(qint32 room_id);
-  QString get_client_tag(qint32 client_id);
   void change_ban_status(qint32 client_id, bool new_ban_status);
 
   void ping(qintptr descriptor);
