@@ -17,7 +17,7 @@ public:
 
   QTcpSocket socket;
   qintptr descriptor;
-  qint32 id_in_db;
+  qint32 client_id_in_db;
 
 signals:
   void ready_to_parse(qint32 mes_type, QString str, qintptr descriptor);
@@ -41,10 +41,8 @@ public:
   MSocket* find_connected(qint32 id);
   void remove_connected(qintptr descriptor);
   QString find_connected_tag(qintptr descriptor);
-private:
-    QHash<qint32, qintptr> registered;
-    QHash<qintptr, QPointer<MSocket>> unregistered;
 
-//  std::unordered_map<qint32, qintptr> registered;
-//  std::unordered_map<qintptr, QPointer<MSocket>> unregistered; //we hold a pointer to MSocket because it enables move semantics for MSocket (Q_OBJECT's are not movable)
+public: //public for convenience, should be private
+  QHash<qint32, qintptr> registered;
+  QHash<qintptr, QPointer<MSocket>> unregistered;
 };

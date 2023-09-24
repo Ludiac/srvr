@@ -1,4 +1,4 @@
-#include "sockets.hpp"
+ #include "sockets.hpp"
 #include "srvr.hpp"
 
 MSocket::MSocket(qintptr socketDescriptor, Server* server, QObject *parent) : server{server}, QObject(parent) {
@@ -22,7 +22,7 @@ void MSocket::start_reading() {
       qDebug() << "received from descriptor:" << descriptor << "mes_type:" << static_cast<std::underlying_type_t<message_type>>(mes_type) << "...";
       switch(mes_type) {
       case message_type::ping: {
-        //
+        //not implemented
       }; break;
       case message_type::sign_in: {
         QString tag, password;
@@ -91,7 +91,15 @@ void MSocket::start_reading() {
         in.commitTransaction();
         mutex.unlock();
         qDebug() << "..." << "name_for_room:" << name_for_room;
-        //server->create_public_room(std::move(name_for_room), descriptor);
+        server->create_public_room(std::move(name_for_room), descriptor);
+      }; break;
+      case message_type::invitation_in_public_room: {
+        qint32 room_id, client_id;
+        in >> room_id >> client_id;
+        in.commitTransaction();
+        mutex.unlock();
+        qDebug() << "..." << "room_id:" << room_id << ", client_id:" << client_id;
+        server->invite_client(room_id, client_id, descriptor);
       }; break;
       default: std::terminate();
       }
@@ -118,7 +126,7 @@ MSocket* SocketsCollection::push(qintptr socketDescriptor, Server* server) {
 MSocket* SocketsCollection::register_connected(qint32 id, qintptr descriptor)
 {
   auto&& a = unregistered.find(descriptor);
-  a.value()->id_in_db = id;
+  a.value()->client_id_in_db = id;
   if (a != unregistered.end()) {
     registered.emplace(id, descriptor);
     return a.value().get();
@@ -132,8 +140,9 @@ MSocket* SocketsCollection::find_connected(qintptr descriptor) {
   if (auto&& b = unregistered.find(descriptor); b != unregistered.end()) {
     return b.value().get();
   } else {
-    qDebug() << "bug occured! find_connected(descriptor) did not find. terminating";
-    std::terminate();
+    qDebug() << "bug occured! find_connected(descriptor) failed";
+    return nullptr;
+    //std::terminate();
   }
 }
 
@@ -141,15 +150,13 @@ MSocket* SocketsCollection::find_connected(qint32 id) {
   if (auto&& b = registered.find(id); b != registered.end()) {
     return find_connected(b.value());
   } else {
-    qDebug() << "bug occured! find_connected_tag(tag) did not find. terminating";
-    std::terminate();
+    return nullptr;
+    //qDebug() << "bug occured! find_connected(qint32) did not find. terminating";
   }
 }
 
 void SocketsCollection::remove_connected(qintptr descriptor) {
-  registered.remove(unregistered.find(descriptor).value()->id_in_db);
-  //unregistered.find(descriptor).value()->socket.deleteLater();
-  //unregistered.find(descriptor).value()->deleteLater();
+  registered.remove(unregistered.find(descriptor).value()->client_id_in_db);
   unregistered.remove(descriptor);
 }
 

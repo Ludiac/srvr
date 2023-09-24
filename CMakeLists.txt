@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         srvr.hpp
         sockets.cpp
         sockets.hpp
+        LWItems.cpp
+        LWItems.hpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
